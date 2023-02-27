@@ -1,8 +1,11 @@
 package com.naveejr.server.controller;
 
 import com.naveejr.server.bo.Author;
+import com.naveejr.server.bo.Book;
 import com.naveejr.server.repository.AuthorRepository;
+import com.naveejr.server.repository.BookRepository;
 import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
@@ -13,8 +16,11 @@ public class AuthorController {
 
 	private final AuthorRepository authorRepository;
 
-	public AuthorController(AuthorRepository authorRepository) {
+	private final BookRepository bookRepository;
+
+	public AuthorController(AuthorRepository authorRepository, BookRepository bookRepository) {
 		this.authorRepository = authorRepository;
+		this.bookRepository = bookRepository;
 	}
 
 	@QueryMapping
@@ -25,6 +31,18 @@ public class AuthorController {
 	@QueryMapping
 	Optional<Author> authorById(@Argument Long id) {
 		return authorRepository.findById(id);
+	}
+
+	@MutationMapping
+	Book addBook(@Argument BookInput book) {
+		Author author = authorRepository.findById(book.authorId).orElseThrow(() -> new IllegalArgumentException("Author not found"));
+
+		Book b = new Book(book.title, book.publisher, author);
+		return bookRepository.save(b);
+	}
+
+
+	record BookInput(String title, String publisher, Long authorId) {
 	}
 
 }
